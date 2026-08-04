@@ -1,10 +1,13 @@
 import { v1 as uuid } from 'uuid'
 import patientData from '../../data/patients'
-import { Patient, PublicPatient, NewPatient } from '../types'
+import { Patient, NonSensitivePatient, NewPatient } from '../types'
 
-const patients: Patient[] = patientData as Patient[]
+const patients: Patient[] = (patientData as Patient[]).map(p => ({
+  ...p,
+  entries: []
+}))
 
-const getAll = (): PublicPatient[] => {
+const getAll = (): NonSensitivePatient[] => {
   return patients.map(({ id, name, dateOfBirth, gender, occupation }) => ({
     id,
     name,
@@ -14,10 +17,14 @@ const getAll = (): PublicPatient[] => {
   }))
 }
 
+const findById = (id: string): Patient | undefined => {
+  return patients.find(p => p.id === id)
+}
+
 const addPatient = (patient: NewPatient): Patient => {
   const newPatient = { id: uuid(), ...patient }
   patients.push(newPatient)
   return newPatient
 }
 
-export default { getAll, addPatient }
+export default { getAll, findById, addPatient }
