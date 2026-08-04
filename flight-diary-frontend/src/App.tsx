@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DiaryList from "./components/DiaryList";
+import DiaryForm from "./components/DiaryForm";
 import type { DiaryEntry } from "./types";
 
 const App = () => {
@@ -14,9 +15,14 @@ const App = () => {
       });
   }, []);
 
+  const addDiary = (entry: DiaryEntry) => {
+    setDiaries(diaries.concat(entry));
+  };
+
   return (
     <div>
       <h1>Flight Diary</h1>
+      <DiaryForm onAdd={addDiary} />
       <DiaryList diaries={diaries} />
     </div>
   );
