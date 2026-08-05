@@ -1,11 +1,8 @@
-import { v1 as uuid } from 'uuid'
-import patientData from '../../data/patients'
-import { Patient, NonSensitivePatient, NewPatient } from '../types'
+import { v1 as uuid } from "uuid";
+import patientData from "../../data/patients";
+import { Patient, NonSensitivePatient, NewPatient } from "../types";
 
-const patients: Patient[] = (patientData as Patient[]).map(p => ({
-  ...p,
-  entries: []
-}))
+const patients: Patient[] = patientData as Patient[];
 
 const getAll = (): NonSensitivePatient[] => {
   return patients.map(({ id, name, dateOfBirth, gender, occupation }) => ({
@@ -13,18 +10,18 @@ const getAll = (): NonSensitivePatient[] => {
     name,
     dateOfBirth,
     gender,
-    occupation
-  }))
-}
+    occupation,
+  }));
+};
 
 const findById = (id: string): Patient | undefined => {
-  return patients.find(p => p.id === id)
-}
+  return patients.find((p) => p.id === id);
+};
 
 const addPatient = (patient: NewPatient): Patient => {
-  const newPatient = { id: uuid(), ...patient }
-  patients.push(newPatient)
-  return newPatient
-}
+  const newPatient = { id: uuid(), ...patient };
+  patients.push(newPatient);
+  return newPatient;
+};
 
-export default { getAll, findById, addPatient }
+export default { getAll, findById, addPatient };
