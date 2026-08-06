@@ -1,10 +1,13 @@
-POST http://localhost:3001/api/patients
+
+
+
+POST http://localhost:3001/api/patients/d2773336-f723-11e9-8f0b-362b9e155667/entries
 Content-Type: application/json
 
 {
-  "name": "Test",
-  "dateOfBirth": "2000-01-01",
-  "ssn": "123456-789",
-  "gender": "invalid_gender",
-  "occupation": "Tester"
+  "type": "HealthCheck",
+  "description": "Annual check",
+  "date": "2024-01-01",
+  "specialist": "Dr. Smith",
+  "healthCheckRating": 0
 }
