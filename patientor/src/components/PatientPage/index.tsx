@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Typography, Box, Button, TextField, Alert } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  TextField,
+  Alert,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 import {
   Male,
   Female,
@@ -136,11 +146,22 @@ const PatientPage = ({ diagnoses }: Props) => {
   const { id } = useParams<{ id: string }>();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [error, setError] = useState<string>("");
+  const [type, setType] = useState<
+    "HealthCheck" | "Hospital" | "OccupationalHealthcare"
+  >("HealthCheck");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [specialist, setSpecialist] = useState("");
-  const [healthCheckRating, setHealthCheckRating] = useState("");
   const [diagnosisCodes, setDiagnosisCodes] = useState("");
+  // HealthCheck
+  const [healthCheckRating, setHealthCheckRating] = useState("");
+  // Hospital
+  const [dischargeDate, setDischargeDate] = useState("");
+  const [dischargeCriteria, setDischargeCriteria] = useState("");
+  // OccupationalHealthcare
+  const [employerName, setEmployerName] = useState("");
+  const [sickLeaveStart, setSickLeaveStart] = useState("");
+  const [sickLeaveEnd, setSickLeaveEnd] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -150,28 +171,54 @@ const PatientPage = ({ diagnoses }: Props) => {
 
   if (!patient) return <div>loading...</div>;
 
+  const buildEntryBody = () => {
+    const base = {
+      type,
+      description,
+      date,
+      specialist,
+      diagnosisCodes: diagnosisCodes
+        ? diagnosisCodes.split(",").map((c) => c.trim())
+        : [],
+    };
+    switch (type) {
+      case "HealthCheck":
+        return { ...base, healthCheckRating: Number(healthCheckRating) };
+      case "Hospital":
+        return {
+          ...base,
+          discharge: { date: dischargeDate, criteria: dischargeCriteria },
+        };
+      case "OccupationalHealthcare":
+        return {
+          ...base,
+          employerName,
+          ...(sickLeaveStart &&
+            sickLeaveEnd && {
+              sickLeave: { startDate: sickLeaveStart, endDate: sickLeaveEnd },
+            }),
+        };
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const { data } = await axios.post<Entry>(
         `${apiBaseUrl}/patients/${id}/entries`,
-        {
-          type: "HealthCheck",
-          description,
-          date,
-          specialist,
-          healthCheckRating: Number(healthCheckRating),
-          diagnosisCodes: diagnosisCodes
-            ? diagnosisCodes.split(",").map((c) => c.trim())
-            : [],
-        },
+        buildEntryBody(),
       );
       setPatient({ ...patient, entries: patient.entries.concat(data) });
       setDescription("");
       setDate("");
       setSpecialist("");
-      setHealthCheckRating("");
       setDiagnosisCodes("");
+      setHealthCheckRating("");
+      setDischargeDate("");
+      setDischargeCriteria("");
+      setEmployerName("");
+      setSickLeaveStart("");
+      setSickLeaveEnd("");
       setError("");
     } catch (e: unknown) {
       if (axios.isAxiosError(e)) {
@@ -197,9 +244,23 @@ const PatientPage = ({ diagnoses }: Props) => {
           marginBottom: 2,
         }}
       >
-        <Typography variant="h6">New HealthCheck entry</Typography>
+        <Typography variant="h6">New entry</Typography>
         {error && <Alert severity="error">{error}</Alert>}
         <form onSubmit={handleSubmit}>
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Type</InputLabel>
+            <Select
+              value={type}
+              label="Type"
+              onChange={(e) => setType(e.target.value as typeof type)}
+            >
+              <MenuItem value="HealthCheck">HealthCheck</MenuItem>
+              <MenuItem value="Hospital">Hospital</MenuItem>
+              <MenuItem value="OccupationalHealthcare">
+                OccupationalHealthcare
+              </MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             label="Description"
@@ -224,18 +285,70 @@ const PatientPage = ({ diagnoses }: Props) => {
           />
           <TextField
             fullWidth
-            label="Healthcheck rating (0-3)"
-            value={healthCheckRating}
-            onChange={(e) => setHealthCheckRating(e.target.value)}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
             label="Diagnosis codes (comma separated)"
             value={diagnosisCodes}
             onChange={(e) => setDiagnosisCodes(e.target.value)}
             margin="dense"
           />
+
+          {type === "HealthCheck" && (
+            <TextField
+              fullWidth
+              label="Health check rating (0-3)"
+              value={healthCheckRating}
+              onChange={(e) => setHealthCheckRating(e.target.value)}
+              margin="dense"
+            />
+          )}
+
+          {type === "Hospital" && (
+            <>
+              <TextField
+                fullWidth
+                label="Discharge date"
+                placeholder="YYYY-MM-DD"
+                value={dischargeDate}
+                onChange={(e) => setDischargeDate(e.target.value)}
+                margin="dense"
+              />
+              <TextField
+                fullWidth
+                label="Discharge criteria"
+                value={dischargeCriteria}
+                onChange={(e) => setDischargeCriteria(e.target.value)}
+                margin="dense"
+              />
+            </>
+          )}
+
+          {type === "OccupationalHealthcare" && (
+            <>
+              <TextField
+                fullWidth
+                label="Employer name"
+                value={employerName}
+                onChange={(e) => setEmployerName(e.target.value)}
+                margin="dense"
+              />
+              <TextField
+                fullWidth
+                label="Sick leave start (optional)"
+                placeholder="YYYY-MM-DD"
+                value={sickLeaveStart}
+                onChange={(e) => setSickLeaveStart(e.target.value)}
+                margin="dense"
+              />
+              <TextField
+                fullWidth
+                label="Sick leave end (optional)"
+                placeholder="YYYY-MM-DD"
+                value={sickLeaveEnd}
+                onChange={(e) => setSickLeaveEnd(e.target.value)}
+                margin="dense"
+              />
+            </>
+          )}
+
           <Button type="submit" variant="contained" sx={{ marginTop: 1 }}>
             Add
           </Button>
